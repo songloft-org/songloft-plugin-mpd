@@ -1,0 +1,44 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+_build/
+*.jsplugin.zip
+*.js
+*.jsc
+*.d.ts
+*.map
+
+# 前端 JS 不受 *.js 限制
+!static/js/*.js
+
+# 临时文件
+*.log
+*.tmp
+*~
+.DS_Store
+Thumbs.db
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 测试
+coverage/
+.nyc_output/
+
+# 其他
+.cache/
