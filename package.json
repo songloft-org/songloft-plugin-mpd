@@ -1,0 +1,19 @@
+{
+  "name": "songloft-plugin-mpd",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare:static": "rm -rf dist",
+    "prebuild": "rm -rf dist",
+    "predev": "rm -rf dist",
+    "build": "songloft-plugin build",
+    "dev": "songloft-plugin dev",
+    "validate:source": "songloft-plugin validate",
+    "validate": "songloft-plugin validate"
+  },
+  "devDependencies": {
+    "@songloft/plugin-builder": "^2.3.3",
+    "@songloft/plugin-sdk": "^2.3.3",
+    "typescript": "^5.9.3"
+  }
+}
