@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+  <title>MPD 播放控制</title>
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Songloft Plugin</p>
+        <h1>MPD 播放控制</h1>
+      </div>
+    </header>
+
+    <nav class="tab-bar">
+      <button class="tab-item active" data-tab="home" type="button" aria-label="首页">
+        <span class="tab-icon" aria-hidden="true"></span>
+        <span class="tab-label">首页</span>
+      </button>
+      <button class="tab-item" data-tab="library" type="button" aria-label="媒体库">
+        <span class="tab-icon" aria-hidden="true"></span>
+        <span class="tab-label">媒体库</span>
+      </button>
+      <button class="tab-item" data-tab="queue" type="button" aria-label="队列">
+        <span class="tab-icon" aria-hidden="true"></span>
+        <span class="tab-label">队列</span>
+      </button>
+      <button class="tab-item" data-tab="settings" type="button" aria-label="设置">
+        <span class="tab-icon" aria-hidden="true"></span>
+        <span class="tab-label">设置</span>
+      </button>
+    </nav>
+
+    <main class="page-content">
+      <div id="view-home" class="page-view active">
+        <section class="search-strip panel">
+          <div class="panel-header">
+            <h3>Songloft 搜索</h3>
+            <span class="badge">歌曲检索</span>
+          </div>
+          <form id="searchForm" class="search-form">
+            <input
+              id="searchInput"
+              class="search-input"
+              type="search"
+              placeholder="搜索歌曲名称、歌手、专辑"
+              autocomplete="off"
+            >
+            <button class="primary-button" type="submit">搜索</button>
+          </form>
+          <div id="searchSummary" class="muted-text">输入关键词后会调用插件后端搜索 Songloft 歌曲。</div>
+          <div id="searchDropdown" class="search-dropdown" hidden>
+            <div id="searchResults" class="stack-list compact search-results-list"></div>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-label">歌单</span>
+            <strong id="playlistCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">歌曲</span>
+            <strong id="songCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">歌手</span>
+            <strong id="artistCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">专辑</span>
+            <strong id="albumCount">0</strong>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="panel">
+            <div class="panel-header">
+              <h3>热门歌手</h3>
+              <span class="badge">聚合视图</span>
+            </div>
+            <div id="artistHighlights" class="pill-list"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-header">
+              <h3>热门专辑</h3>
+              <span class="badge">聚合视图</span>
+            </div>
+            <div id="albumHighlights" class="album-highlight-grid"></div>
+          </article>
+        </section>
+      </div>
+
+      <div id="view-library" class="page-view">
+        <section class="panel explorer-panel">
+          <div class="segmented-nav">
+            <button class="segment-button active" type="button" data-explorer-target="home">最近</button>
+            <button class="segment-button" type="button" data-explorer-target="songs">歌曲</button>
+            <button class="segment-button" type="button" data-explorer-target="playlists">歌单</button>
+            <button class="segment-button" type="button" data-explorer-target="artists">歌手</button>
+            <button class="segment-button" type="button" data-explorer-target="albums">专辑</button>
+          </div>
+        </section>
+
+        <div id="libraryHomeSections">
+          <section class="panel">
+            <div class="panel-header">
+              <h3>最近歌曲</h3>
+              <div class="panel-header-actions">
+                <button class="panel-header-action" type="button" data-library-refresh="current">刷新</button>
+              </div>
+            </div>
+            <div id="songList" class="stack-list">
+              <p class="empty-text">等待歌曲数据...</p>
+            </div>
+          </section>
+        </div>
+
+        <div id="librarySectionList" class="stack-list" style="display: none;">
+          <p class="empty-text">等待浏览数据...</p>
+        </div>
+      </div>
+
+      <div id="view-queue" class="page-view">
+        <section class="panel">
+          <div class="panel-header">
+            <h3>当前队列</h3>
+            <span id="queueBadge" class="badge">0 首</span>
+          </div>
+          <div class="runtime-actions">
+            <button id="refreshQueueButton" class="secondary-button" type="button">刷新队列</button>
+            <button id="clearQueueButton" class="secondary-button" type="button">清空队列</button>
+          </div>
+          <div id="queueList" class="stack-list">
+            <p class="empty-text">等待队列数据...</p>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-settings" class="page-view">
+        <section class="panel">
+          <div class="panel-header">
+            <h3>MPD 运行时</h3>
+            <span id="runtimeModeBadge" class="badge">config</span>
+          </div>
+          <div class="runtime-container">
+            <div class="runtime-status">
+              <p><strong>服务:</strong> <span id="runtimeServiceStatus">unknown</span></p>
+              <p><strong>控制:</strong> <span id="runtimeManagedStatus">false</span></p>
+              <p><strong>二进制:</strong> <span id="runtimeMpdBinaryStatus">false / false</span></p>
+              <p><strong>配置:</strong> <span id="runtimeConfigStatus">未生成</span></p>
+              <p><strong>自启动:</strong> <span id="autostartEnabledStatus">false</span></p>
+            </div>
+            <div class="runtime-actions">
+              <button id="startMpdButton" class="primary-button" type="button">启动 MPD</button>
+              <button id="restartMpdButton" class="secondary-button" type="button">重启 MPD</button>
+              <button id="stopMpdButton" class="secondary-button" type="button">停止托管</button>
+              <button id="toggleAutostartButton" class="secondary-button" type="button">关闭自启动</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>媒体库维护</h3>
+            <span class="badge">手动刷新</span>
+          </div>
+          <div class="runtime-grid">
+            <div class="runtime-status">
+              <p><strong>说明:</strong> 媒体库目录默认走缓存与按需加载，不再做高频自动刷新。</p>
+              <p><strong>建议:</strong> 如果 Songloft 曲库刚变动，可以手动重新扫描后再回到媒体库查看。</p>
+              <p id="libraryRescanNotice" class="binary-action-notice" hidden></p>
+            </div>
+            <div class="runtime-actions">
+              <button id="rescanLibraryButton" class="secondary-button" type="button">重新扫描媒体库</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>二进制管理</h3>
+            <span id="binaryPlatformBadge" class="badge">检测中</span>
+          </div>
+          <div class="runtime-grid">
+            <div class="runtime-status">
+              <p><strong>宿主:</strong> <span id="binaryHostSummary">unknown</span></p>
+              <p><strong>状态:</strong> <span id="binaryDownloadConfigStatus">未配置</span></p>
+            </div>
+            <div class="runtime-actions">
+              <div class="binary-download-card">
+                <p id="binaryDownloadSummary" class="binary-download-summary">自动识别平台并下载对应的 MPD/MPC bundle，或手动上传压缩包。</p>
+                <button id="managedBundleInstalledButton" class="secondary-button installed-button" type="button" disabled hidden>已安装</button>
+                <button id="managedBundleNotInstalledButton" class="secondary-button not-installed-button" type="button" hidden>未安装</button>
+                <div id="binaryInstallActions" class="binary-action-row">
+                  <button id="downloadManagedBundleButton" class="secondary-button" type="button">在线下载</button>
+                  <button id="uploadManagedBundleButton" class="secondary-button" type="button">手动上传</button>
+                </div>
+                <input id="uploadManagedBundleInput" type="file" accept=".tgz,.tar.gz,application/gzip,application/x-gzip" hidden>
+                <p id="binaryActionNotice" class="binary-action-notice" hidden></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="audioPreferencePanel" class="panel">
+          <div class="panel-header">
+            <h3>音频输出</h3>
+            <span class="badge">手动切换</span>
+          </div>
+          <div class="runtime-grid">
+            <div class="runtime-status">
+              <div class="audio-scene-card">
+                <p class="eyebrow">使用场景</p>
+                <strong id="audioScenarioTitle">默认设置</strong>
+                <p id="audioScenarioSummary" class="muted-text">可直接切到有线 / HDMI 或蓝牙音箱预设；如果不想手动指定，可恢复默认设置。</p>
+                <div class="audio-scene-actions">
+                  <button id="audioScenarioWiredButton" class="secondary-button" type="button">有线 / HDMI</button>
+                  <button id="audioScenarioBluetoothButton" class="secondary-button active" type="button">蓝牙音箱</button>
+                </div>
+                <div class="audio-primary-actions">
+                  <button id="saveAudioPreferencesInlineButton" class="primary-button" type="button">保存并重启 MPD</button>
+                  <button id="resetAudioPreferencesInlineButton" class="secondary-button" type="button">恢复默认设置</button>
+                </div>
+                <p id="audioScenarioNotice" class="binary-action-notice" hidden></p>
+              </div>
+              <div class="audio-guidance-card">
+                <p class="eyebrow">使用说明</p>
+                <p class="muted-text">蓝牙音箱通常要接通宿主的 PulseAudio 或 PipeWire 会话；有线 / HDMI 一般优先用 ALSA。</p>
+                <p id="audioFallbackWarning" class="binary-action-notice error" hidden></p>
+                <p id="audioBluetoothCheckSummary" class="muted-text" hidden></p>
+                <div id="audioBluetoothChecklist" class="stack-list compact" hidden></div>
+              </div>
+              <label class="binary-field">
+                <span>ALSA 设备</span>
+                <select id="audioAlsaDeviceSelect" class="search-input">
+                  <option value="">留空（不手动指定）</option>
+                  <option value="__custom__">手动输入设备名</option>
+                </select>
+              </label>
+              <p id="audioAlsaDeviceSummary" class="muted-text">如果你不确定怎么填，可以先保持留空。</p>
+              <div id="audioManualDeviceSection" class="audio-manual-section" hidden>
+                <label class="binary-field">
+                  <span>高级手动设备名</span>
+                  <input id="audioAlsaDeviceInput" class="search-input" type="text" placeholder="例如 plughw:1,0">
+                </label>
+                <p class="muted-text">只有在下拉列表没有目标设备时，才建议手动输入 `plughw:1,0` 这类设备名。</p>
+              </div>
+              <details id="audioAdvancedCard" class="audio-fold-card">
+                <summary class="audio-fold-summary">
+                  <span>蓝牙 / 桌面音频高级设置</span>
+                  <span class="badge">可折叠</span>
+                </summary>
+                <div id="audioAdvancedSection" class="audio-manual-section audio-advanced-section">
+                  <label class="binary-field">
+                    <span>输出类型</span>
+                    <select id="audioOutputTypeSelect" class="search-input">
+                      <option value="auto">自动选择（推荐）</option>
+                      <option value="pulse">PulseAudio（蓝牙 / 桌面音频）</option>
+                      <option value="alsa">ALSA（有线 / HDMI）</option>
+                      <option value="pipewire">PipeWire（桌面 / 蓝牙）</option>
+                      <option value="null">Null（仅诊断）</option>
+                    </select>
+                  </label>
+                  <label class="binary-field">
+                    <span>XDG_RUNTIME_DIR</span>
+                    <input id="audioXdgRuntimeDirInput" class="search-input" type="text" placeholder="例如 /run/user/1000">
+                  </label>
+                  <label class="binary-field">
+                    <span>PulseAudio 服务器</span>
+                    <input id="audioPulseServerInput" class="search-input" type="text" placeholder="例如 unix:/run/user/1000/pulse/native">
+                  </label>
+                  <label class="binary-field">
+                    <span>PipeWire Remote</span>
+                    <input id="audioPipewireRemoteInput" class="search-input" type="text" placeholder="例如 pipewire-0">
+                  </label>
+                  <p class="muted-text">如果你接的是蓝牙音箱，通常需要宿主机提供 PulseAudio 或 PipeWire 会话；Docker 容器里仅透传 `/dev/snd` 往往只能驱动有线输出。</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <footer class="mini-player" id="miniPlayerBar">
+    <button class="mini-player-main" type="button" aria-label="打开播放器">
+      <div class="mini-cover">&#9835;</div>
+      <div class="mini-meta">
+        <strong id="miniTrackTitle">未开始播放</strong>
+        <span id="miniTrackMeta">等待后端播放器接入</span>
+      </div>
+    </button>
+    <div class="mini-actions">
+      <button id="miniPrevButton" class="mini-control-button" type="button" aria-label="上一首"></button>
+      <button id="miniPlayButton" class="mini-control-button primary" type="button" aria-label="播放"></button>
+      <button id="miniNextButton" class="mini-control-button" type="button" aria-label="下一首"></button>
+    </div>
+    <div class="mini-player-progress" aria-hidden="true">
+      <span id="miniProgressFill" class="mini-player-progress-fill"></span>
+    </div>
+  </footer>
+
+  <div id="playerSheetOverlay" class="player-sheet-overlay" hidden>
+    <div class="player-sheet-backdrop"></div>
+    <section class="player-sheet" role="dialog" aria-modal="true" aria-labelledby="trackTitle">
+      <div class="player-sheet-header">
+        <button id="closePlayerSheetButton" class="player-sheet-close" type="button" tabindex="-1" aria-hidden="true"></button>
+      </div>
+      <div id="playerSheetPages" class="player-sheet-pages">
+        <section id="playerSheetPlaybackPage" class="player-sheet-page player-playback-page">
+          <section class="hero-card">
+            <div class="cover-placeholder" id="coverPlaceholder">MPD
+              <div class="cover-image" id="coverImage"></div>
+            </div>
+            <div class="hero-content">
+              <div class="player-track-stack">
+                <p class="status" id="serviceStatus">服务状态: 初始化中</p>
+                <h2 id="trackTitle">准备连接 Songloft 与 MPD</h2>
+                <p id="trackMeta">首版骨架已就绪，下一步接入歌单、搜索、队列和歌词。</p>
+                <p id="playerProgress" class="muted-text">00:00 / 00:00</p>
+                <div class="player-seek">
+                  <span id="progressCurrentLabel" class="seek-label">00:00</span>
+                  <input
+                    id="progressSlider"
+                    class="range-input"
+                    type="range"
+                    min="0"
+                    max="0"
+                    step="1"
+                    value="0"
+                  >
+                  <span id="progressTotalLabel" class="seek-label">00:00</span>
+                </div>
+              </div>
+              <div class="player-controls-stack">
+                <div class="hero-actions player-main-actions">
+                  <div class="player-mode-wrap">
+                    <button id="playerModeButton" class="player-circle-button" type="button" aria-label="播放模式"></button>
+                    <div id="playerModePopover" class="player-mode-popover" hidden>
+                      <button class="player-mode-option" data-mode="sequence" type="button">顺序播放</button>
+                      <button class="player-mode-option" data-mode="repeat" type="button">列表循环</button>
+                      <button class="player-mode-option" data-mode="single" type="button">单曲循环</button>
+                      <button class="player-mode-option" data-mode="random" type="button">随机播放</button>
+                    </div>
+                  </div>
+                  <button id="heroPrevButton" class="player-circle-button" type="button" aria-label="上一首"></button>
+                  <button id="heroPlayButton" class="player-circle-button primary" type="button" aria-label="播放"></button>
+                  <button id="heroNextButton" class="player-circle-button" type="button" aria-label="下一首"></button>
+                  <div class="player-mode-wrap">
+                    <button id="playerVolumeToggleButton" class="player-circle-button" type="button" aria-label="音量控制"></button>
+                    <div id="playerVolumePopover" class="player-volume-popover" hidden>
+                      <div class="player-volume-slider-wrap">
+                        <input
+                          id="volumeSlider"
+                          class="player-volume-slider"
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value="0"
+                        >
+                      </div>
+                      <span id="volumeValue" class="player-volume-value">--%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="playerSheetLyricsPage" class="player-sheet-page player-lyrics-page">
+          <div class="lyrics-page-header">
+            <p class="status">当前歌词</p>
+            <h2 id="lyricsTrackTitle">等待 MPD 当前曲目</h2>
+            <p id="lyricsTrackMeta" class="muted-text">当前还没有可播放曲目</p>
+            <span id="lyricsSourceBadge" class="badge">等待同步</span>
+          </div>
+          <section class="lyrics-panel lyrics-panel-full">
+            <div id="lyricsList" class="lyrics-list lyrics-list-large">
+              <p class="empty-text">等待歌曲或歌词数据...</p>
+            </div>
+          </section>
+        </section>
+      </div>
+      <div class="player-sheet-pager" role="tablist" aria-label="播放器页面">
+        <button id="playerPagePlaybackButton" class="player-sheet-dot active" type="button" data-player-page="playback" role="tab" aria-label="播放页" aria-selected="true"></button>
+        <button id="playerPageLyricsButton" class="player-sheet-dot" type="button" data-player-page="lyrics" role="tab" aria-label="歌词页" aria-selected="false"></button>
+      </div>
+    </section>
+    <div id="playerQueueDrawerOverlay" class="player-queue-drawer-overlay" hidden>
+      <button class="player-queue-drawer-backdrop" type="button" aria-label="关闭播放列表"></button>
+      <aside class="player-queue-drawer">
+        <div class="player-queue-drawer-handle" aria-hidden="true"></div>
+        <div class="player-queue-drawer-header">
+          <div>
+            <p class="status">当前播放列表</p>
+            <h3>队列</h3>
+          </div>
+          <span id="playerQueueDrawerBadge" class="badge">0 首</span>
+        </div>
+        <div id="queueDrawerList" class="stack-list compact queue-drawer-list"></div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="audioGuideModal" class="modal-overlay" hidden>
+    <div class="modal-dialog audio-guide-modal" role="dialog" aria-modal="true" aria-labelledby="audioGuideModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">蓝牙部署引导</p>
+          <h3 id="audioGuideModalTitle">蓝牙音箱需要先接通宿主音频会话</h3>
+        </div>
+        <button id="closeAudioGuideModalButton" class="secondary-button modal-close-button" type="button" aria-label="关闭" onclick="window.__songloftCloseAudioGuideModal && window.__songloftCloseAudioGuideModal(); return false;">关闭</button>
+      </div>
+      <div class="modal-body">
+        <div class="audio-template-card">
+          <strong>优先只改必须改的字段，其他默认值可以先直接用</strong>
+          <p class="muted-text">镜像固定使用 `songloft/songloft:latest`，端口按当前页面端口自动生成且不需要手填。通常先改音乐目录、数据目录、宿主用户名和管理员密码就够了。</p>
+          <p class="muted-text">这里的"宿主用户名"只用于生成 `/home/&lt;宿主用户名&gt;/.config/pulse/cookie` 挂载路径，不等于容器里的 `ADMIN_USERNAME=admin`。</p>
+          <div class="audio-template-grid">
+            <label class="binary-field">
+              <span>宿主用户名</span>
+              <input id="audioTemplateHostUserInput" class="search-input" type="text" placeholder="例如 admin，仅用于 /home/admin/.config/pulse/cookie 路径">
+            </label>
+            <label class="binary-field">
+              <span>宿主音乐目录</span>
+              <input id="audioTemplateMusicDirInput" class="search-input" type="text" placeholder="例如 /vol1/1000/音乐">
+            </label>
+            <label class="binary-field">
+              <span>宿主数据目录</span>
+              <input id="audioTemplateDataDirInput" class="search-input" type="text" placeholder="例如 /path/to/data">
+            </label>
+            <label class="binary-field">
+              <span>管理员密码</span>
+              <input id="audioTemplatePasswordInput" class="search-input" type="text" placeholder="例如 your_strong_password">
+            </label>
+          </div>
+          <label class="binary-field">
+            <span>docker run 模板</span>
+            <textarea id="audioDockerRunTemplateOutput" class="search-input audio-template-output"></textarea>
+          </label>
+          <label class="binary-field">
+            <span>docker-compose 模板</span>
+            <textarea id="audioDockerComposeTemplateOutput" class="search-input audio-template-output"></textarea>
+          </label>
+          <label class="audio-guide-reminder">
+            <input id="audioGuideSuppressReminderCheckbox" type="checkbox">
+            <span>下次不再提醒</span>
+          </label>
+          <div class="binary-action-row">
+            <button id="copyAudioDockerRunButton" class="secondary-button" type="button">复制 docker run</button>
+            <button id="copyAudioDockerComposeButton" class="secondary-button" type="button">复制 docker-compose</button>
+            <button id="closeAudioGuideModalFooterButton" class="primary-button" type="button" onclick="window.__songloftCloseAudioGuideModal && window.__songloftCloseAudioGuideModal(); return false;">关闭引导</button>
+          </div>
+          <p id="audioPreferenceNotice" class="binary-action-notice" hidden></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="static/js/app.js"></script>
+</body>
+</html>
