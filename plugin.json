@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/songloft-org/plugin-toolchain/main/schemas/plugin.schema.json",
   "name": "MPD播控音箱",
   "version": "1.0.0",
-  "description": "通MPD播放器控制有线、蓝牙音箱放歌",
+  "description": "通过MPD播放器控制有线、蓝牙音箱放歌",
   "author": "Songloft Team",
   "homepage": "https://github.com/songloft-org/songloft-plugin-mpd",
   "license": "Apache-2.0",
