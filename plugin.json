@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "通MPD播放器控制有线、蓝牙音箱放歌",
   "author": "Songloft Team",
-  "homepage": "https://github.com/<YOUR_USER>/songloft-plugin-mpd",
+  "homepage": "https://github.com/songloft-org/songloft-plugin-mpd",
   "license": "Apache-2.0",
   "icon": "icon.svg",
   "entryPath": "mpd-player",
