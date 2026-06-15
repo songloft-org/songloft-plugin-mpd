@@ -20,7 +20,7 @@
     "/api"
   ],
   "updateUrl": "https://raw.githubusercontent.com/<YOUR_USER>/songloft-plugin-mpd/main/plugin.json",
-  "download_url": "https://github.com/<YOUR_USER>/songloft-plugin-mpd/releases/download/v1.0.0/mpd-player.jsplugin.zip",
+  "download_url": "https://github.com/songloft-org/songloft-plugin-mpd/releases/download/v1.0.0/mpd-player.jsplugin.zip",
   "entryHash": "142e011bc1c2a717e57c863c189265b42695bda28463b08fd56fa30e7fa07ddf",
   "zipHash": "52f6a58abf6426700964012f09ef34c13ca4509ac3a27dc953bd63d1816b5df6"
 }
