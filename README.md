@@ -1,0 +1,1 @@
+# songloft-plugin-mpd
