@@ -8,7 +8,6 @@ Songloft MPD 播放控制插件 -- 通过 Web 界面控制本地 MPD（Music Pla
 - 队列管理：添加/删除歌曲、清空队列、随机播放
 - 媒体库浏览：按歌曲、艺术家、专辑浏览，支持搜索
 - 多音频输出：支持有线和蓝牙音箱播放
-- 自动适配 Songloft 亮/暗主题
 - 智能轮询：根据播放状态动态调整轮询频率
 - 批量操作优化：批量播放性能提升 89%
 
@@ -39,10 +38,11 @@ sudo docker run -d \
 - `-v /vol1/1000/docker/songloft/data:/app/data` -- 数据持久化目录
 - `--device /dev/snd:/dev/snd` -- 映射声卡设备，有线音箱需要
 - `ADMIN_USERNAME` / `ADMIN_PASSWORD` -- 管理员账号密码
-
+-v /run/user/1000/pulse:/run/user/1000/pulse \ -- 蓝牙音箱需要
+-v /home/admin/.config/pulse/cookie:/root/.config/pulse/cookie:ro \ -- 这里的admin是宿主机登录名
 ### 配置蓝牙自动连接
 
-如果使用蓝牙音箱，需要配置开机自动连接，确保每次重启后音箱自动配对。
+如果使用蓝牙音箱，可以配置开机自动连接，确保每次重启后音箱自动配对。
 
 #### 1. 创建自启动服务文件
 
