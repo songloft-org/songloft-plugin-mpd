@@ -18,18 +18,19 @@ Songloft MPD 播放控制插件 -- 通过 Web 界面控制本地 MPD（Music Pla
 ```bash
 sudo docker run -d \
   --name songloft \
+  --restart=always \
   -p 58091:58091 \
   -v /vol1/1000/音乐:/app/music \
   -v /vol1/1000/docker/songloft/data:/app/data \
   --device /dev/snd:/dev/snd \
-  --group-add 29 \
+  --group-add "$(getent group audio | cut -d: -f3)" \
   -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=admin \
+  -e ADMIN_PASSWORD='admin' \
   -e XDG_RUNTIME_DIR=/run/user/1000 \
   -e PULSE_SERVER=unix:/run/user/1000/pulse/native \
-  -e PULSE_COOKIE=/root/.config/pulse/cookie \
+  -e PULSE_COOKIE=/run/user/1000/pulse/cookie \
   -v /run/user/1000/pulse:/run/user/1000/pulse \
-  -v /home/admin/.config/pulse/cookie:/root/.config/pulse/cookie:ro \
+  -v /home/admin/.config/pulse/cookie:/run/user/1000/pulse/cookie:ro \
   songloft/songloft:latest
 ```
 
